@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Desvíos Vera – Estructura</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; color: #1a1a2e; }
+
+  header {
+    background: #1a1a2e;
+    color: #fff;
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  header h1 { font-size: 18px; font-weight: 600; letter-spacing: 0.5px; }
+  header span { font-size: 12px; color: #8888aa; }
+
+  .controls {
+    background: #fff;
+    padding: 16px 32px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .controls label { font-size: 13px; font-weight: 500; color: #555; }
+  .controls select {
+    padding: 7px 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 13px;
+    background: #fff;
+    cursor: pointer;
+  }
+  #refresh-btn {
+    margin-left: auto;
+    padding: 7px 16px;
+    background: #1a1a2e;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  #refresh-btn:hover { background: #2d2d50; }
+  #last-update { font-size: 11px; color: #999; }
+
+  .summary-cards {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 12px;
+    padding: 20px 32px 0;
+  }
+  .card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    border-top: 3px solid #ccc;
+  }
+  .card.presupuesto { border-color: #4361ee; }
+  .card.estimado    { border-color: #7209b7; }
+  .card.consumido   { border-color: #3a86ff; }
+  .card.desvio      { border-color: #e63946; }
+  .card.pct         { border-color: #f4a261; }
+  .card.saldo       { border-color: #2a9d8f; }
+  .card-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .card-value { font-size: 20px; font-weight: 700; color: #1a1a2e; }
+  .card.desvio .card-value { color: #e63946; }
+  .card.saldo  .card-value { color: #2a9d8f; }
+
+  .table-wrap {
+    padding: 20px 32px 32px;
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    font-size: 13px;
+  }
+  thead tr { background: #1a1a2e; color: #fff; }
+  thead th { padding: 11px 14px; text-align: right; font-weight: 500; font-size: 12px; }
+  thead th:first-child { text-align: left; }
+  tbody tr { border-bottom: 1px solid #f0f0f0; transition: background 0.15s; }
+  tbody tr:hover { background: #f7f9ff; }
+  tbody tr.total-row { background: #1a1a2e; color: #fff; font-weight: 700; }
+  tbody tr.total-row:hover { background: #1a1a2e; }
+  td { padding: 10px 14px; text-align: right; }
+  td:first-child { text-align: left; font-weight: 500; }
+  .neg { color: #e63946; }
+  .pos { color: #2a9d8f; }
+  .neutral { color: #aaa; }
+
+  #status { padding: 40px; text-align: center; color: #888; font-size: 14px; }
+  .error { color: #e63946; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Desvíos Vera — Estructura</h1>
+  <span id="last-update">—</span>
+</header>
+
+<div class="controls">
+  <label>Mes:</label>
+  <select id="mes-select"></select>
+  <button id="refresh-btn">↻ Actualizar</button>
+</div>
+
+<div class="summary-cards">
+  <div class="card presupuesto"><div class="card-label">Presupuesto</div><div class="card-value" id="c-presupuesto">—</div></div>
+  <div class="card estimado">  <div class="card-label">Estimado del mes</div><div class="card-value" id="c-estimado">—</div></div>
+  <div class="card consumido"> <div class="card-label">Consumido del mes</div><div class="card-value" id="c-consumido">—</div></div>
+  <div class="card desvio">    <div class="card-label">Desvío del mes</div><div class="card-value" id="c-desvio">—</div></div>
+  <div class="card pct">       <div class="card-label">% Presupuesto consumido</div><div class="card-value" id="c-pct">—</div></div>
+  <div class="card saldo">     <div class="card-label">Saldo</div><div class="card-value" id="c-saldo">—</div></div>
+</div>
+
+<div class="table-wrap">
+  <div id="status">Cargando datos...</div>
+  <table id="main-table" style="display:none">
+    <thead>
+      <tr>
+        <th>Ítem</th>
+        <th>Presupuesto</th>
+        <th>Estimado</th>
+        <th>Consumido</th>
+        <th>Desvío</th>
+        <th>% Cons.</th>
+        <th>Saldo</th>
+      </tr>
+    </thead>
+    <tbody id="table-body"></tbody>
+  </table>
+</div>
+
+<script>
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBAJF6lxUvz1jVKbG-fiGWdQswLin9IWSJYEK8JPfH4Ckt1zXqWfen6eNIACs_r4yhsVV2gVyR9kwg/pub?gid=1780698076&single=true&output=csv";
+
+// Parsear CSV respetando comillas
+function parseCSV(text) {
+  const rows = [];
+  const lines = text.split('\n');
+  for (const line of lines) {
+    const cols = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') { inQ = !inQ; }
+      else if (c === ',' && !inQ) { cols.push(cur.trim()); cur = ''; }
+      else { cur += c; }
+    }
+    cols.push(cur.trim());
+    rows.push(cols);
+  }
+  return rows;
+}
+
+function parseNum(str) {
+  if (!str || str === '-' || str === '' || str === '#N/A' || str === '#VALUE!') return null;
+  // Formato argentino: $1.234.567 o 1.234.567 (puntos = miles, sin decimales relevantes)
+  let cleaned = str.replace(/\$/g, '').trim();
+  // Si tiene coma decimal estilo europeo: 1.234,56
+  if (cleaned.includes(',')) {
+    cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+  } else {
+    // Solo puntos = separadores de miles
+    cleaned = cleaned.replace(/\./g, '');
+  }
+  const n = parseFloat(cleaned);
+  return isNaN(n) ? null : n;
+}
+
+function fmt(n, showSign = false) {
+  if (n === null || n === undefined) return '<span class="neutral">-</span>';
+  const abs = Math.abs(n);
+  const formatted = '$' + abs.toLocaleString('es-AR', { maximumFractionDigits: 0 });
+  if (showSign && n < 0) return `<span class="neg">-${formatted}</span>`;
+  if (showSign && n > 0) return `<span class="pos">${formatted}</span>`;
+  return formatted;
+}
+
+function fmtPct(str) {
+  if (!str || str === '-' || str === '') return '<span class="neutral">-</span>';
+  return str;
+}
+
+// Detectar columnas por mes
+// Fila 2 (índice 1): meses agrupados
+// Fila 3 (índice 2): headers por columna
+// Estructura de columnas por mes: ESTIMADO, REAL, DESVÍO, % CONS. (4 cols por mes)
+// Col 0: ÍTEM, Col 1: PRESUPUESTO, luego grupos de 4
+
+function detectMeses(rows) {
+  const mesRow = rows[1]; // fila 2
+  const meses = [];
+  // Empieza en col 2 (después de ÍTEM y PRESUPUESTO)
+  for (let i = 2; i < mesRow.length; i++) {
+    const v = mesRow[i].replace(/\n/g, ' ').trim();
+    if (v && v !== '' && !v.includes('RESUMEN') && !v.includes('TOTAL') && !v.includes('SALDO') && !v.includes('%')) {
+      meses.push({ nombre: v, colStart: i });
+    }
+  }
+  return meses;
+}
+
+let allRows = [];
+let meses = [];
+
+async function loadData() {
+  document.getElementById('status').textContent = 'Cargando datos...';
+  document.getElementById('main-table').style.display = 'none';
+  try {
+    const resp = await fetch(CSV_URL + '&t=' + Date.now());
+    const text = await resp.text();
+    allRows = parseCSV(text);
+    meses = detectMeses(allRows);
+
+    const sel = document.getElementById('mes-select');
+    const currentVal = sel.value;
+    sel.innerHTML = '';
+    meses.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.nombre;
+      opt.textContent = m.nombre;
+      sel.appendChild(opt);
+    });
+    if (currentVal && meses.find(m => m.nombre === currentVal)) {
+      sel.value = currentVal;
+    }
+
+    document.getElementById('last-update').textContent = 'Actualizado: ' + new Date().toLocaleTimeString('es-AR');
+    renderMes();
+  } catch(e) {
+    document.getElementById('status').innerHTML = '<span class="error">Error al cargar datos. Verificá que el CSV esté publicado.</span>';
+  }
+}
+
+function renderMes() {
+  const mesNombre = document.getElementById('mes-select').value;
+  const mes = meses.find(m => m.nombre === mesNombre);
+  if (!mes) return;
+
+  const colEst  = mes.colStart;
+  const colReal = mes.colStart + 1;
+  const colDesv = mes.colStart + 2;
+  const colPct  = mes.colStart + 3;
+
+  // Filas de datos: desde fila índice 3 (fila 4 en sheet) hasta el final
+  // Excluir filas vacías y la fila TOTAL al final
+  const dataRows = allRows.slice(3);
+
+  let totPresup = 0, totEst = 0, totReal = 0;
+
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = '';
+
+  dataRows.forEach(row => {
+    const item = row[0];
+    if (!item || item.trim() === '') return;
+
+    const isTotal = item.toUpperCase().includes('TOTAL');
+    const presup = parseNum(row[1]);
+    const est    = parseNum(row[colEst]);
+    const real   = parseNum(row[colReal]);
+    const desv   = parseNum(row[colDesv]);
+    const pct    = row[colPct] ? row[colPct].trim() : '-';
+    const saldo  = presup !== null ? (presup - (real || 0)) : null;
+
+    if (!isTotal && presup !== null) totPresup += presup;
+    if (!isTotal && est !== null)    totEst    += est;
+    if (!isTotal && real !== null)   totReal   += real;
+
+    const tr = document.createElement('tr');
+    if (isTotal) tr.classList.add('total-row');
+
+    const desvDisplay = desv !== null ? fmt(desv, true) :
+      (isTotal ? fmt(totEst - totReal, true) : '<span class="neutral">-</span>');
+
+    tr.innerHTML = `
+      <td>${item}</td>
+      <td>${fmt(presup)}</td>
+      <td>${fmt(est)}</td>
+      <td>${fmt(real)}</td>
+      <td>${isTotal ? fmt(totEst - totReal, true) : (desv !== null ? fmt(desv, true) : '<span class="neutral">-</span>')}</td>
+      <td>${fmtPct(pct)}</td>
+      <td>${fmt(saldo)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Cards resumen (fila TOTAL)
+  const totalRow = dataRows.find(r => r[0] && r[0].toUpperCase().includes('TOTAL'));
+  const tPresup = totalRow ? parseNum(totalRow[1]) : totPresup;
+  const tEst    = totalRow ? parseNum(totalRow[colEst])  : totEst;
+  const tReal   = totalRow ? parseNum(totalRow[colReal]) : totReal;
+  const tPct    = totalRow ? totalRow[colPct] : '-';
+  const tSaldo  = tPresup !== null ? tPresup - (tReal || 0) : null;
+  const tDesv   = (tEst !== null && tReal !== null) ? (tEst - tReal) : null;
+
+  document.getElementById('c-presupuesto').textContent = tPresup !== null ? '$' + tPresup.toLocaleString('es-AR', {maximumFractionDigits:0}) : '-';
+  document.getElementById('c-estimado').textContent    = tEst    !== null ? '$' + tEst.toLocaleString('es-AR',    {maximumFractionDigits:0}) : '-';
+  document.getElementById('c-consumido').textContent   = tReal   !== null ? '$' + tReal.toLocaleString('es-AR',   {maximumFractionDigits:0}) : '-';
+  document.getElementById('c-desvio').textContent      = tDesv   !== null ? '$' + Math.abs(tDesv).toLocaleString('es-AR', {maximumFractionDigits:0}) : '-';
+  document.getElementById('c-pct').textContent         = tPct && tPct !== '-' ? tPct : '-';
+  document.getElementById('c-saldo').textContent       = tSaldo  !== null ? '$' + tSaldo.toLocaleString('es-AR',  {maximumFractionDigits:0}) : '-';
+
+  document.getElementById('status').textContent = '';
+  document.getElementById('main-table').style.display = 'table';
+}
+
+document.getElementById('mes-select').addEventListener('change', renderMes);
+document.getElementById('refresh-btn').addEventListener('click', loadData);
+
+loadData();
+</script>
+</body>
+</html>
